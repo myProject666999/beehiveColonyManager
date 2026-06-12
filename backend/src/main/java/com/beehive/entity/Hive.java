@@ -14,6 +14,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -36,6 +37,9 @@ public class Hive {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "apiary_id", nullable = false)
     private Apiary apiary;
+
+    @Transient
+    private Long apiaryId;
 
     @Column(name = "hive_number", nullable = false)
     private String hiveNumber;

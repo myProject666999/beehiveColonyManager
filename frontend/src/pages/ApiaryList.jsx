@@ -1,7 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Table, Button, Modal, Form, Input, InputNumber, Space, Popconfirm, message } from 'antd';
+import { Table, Button, Modal, Form, Input, InputNumber, Space, Popconfirm, message, Select, DatePicker } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { apiaries, nectarSources } from '../api';
+import dayjs from 'dayjs';
+
+const seasonOptions = [
+  { value: 'spring', label: '春季' },
+  { value: 'summer', label: '夏季' },
+  { value: 'autumn', label: '秋季' },
+  { value: 'winter', label: '冬季' },
+];
 
 const seasonMap = { spring: '春季', summer: '夏季', autumn: '秋季', winter: '冬季' };
 
@@ -101,7 +109,11 @@ export default function ApiaryList() {
   const handleNsEdit = (record, apiaryId) => {
     setCurrentApiaryId(apiaryId);
     setNsEditing(record);
-    nsForm.setFieldsValue(record);
+    nsForm.setFieldsValue({
+      ...record,
+      bloomStart: record.bloomStart ? dayjs(record.bloomStart) : null,
+      bloomEnd: record.bloomEnd ? dayjs(record.bloomEnd) : null,
+    });
     setNsModalOpen(true);
   };
 
@@ -118,12 +130,25 @@ export default function ApiaryList() {
   const handleNsSubmit = async () => {
     try {
       const values = await nsForm.validateFields();
-      const payload = { ...values, apiaryId: currentApiaryId };
+      const payload = {
+        ...values,
+        apiaryId: currentApiaryId,
+        bloomStart: values.bloomStart ? values.bloomStart.format('YYYY-MM-DD') : null,
+        bloomEnd: values.bloomEnd ? values.bloomEnd.format('YYYY-MM-DD') : null,
+      };
+      delete payload.bloomStart;
+      delete payload.bloomEnd;
+      const finalPayload = {
+        ...values,
+        apiaryId: currentApiaryId,
+        bloomStart: values.bloomStart ? values.bloomStart.format('YYYY-MM-DD') : undefined,
+        bloomEnd: values.bloomEnd ? values.bloomEnd.format('YYYY-MM-DD') : undefined,
+      };
       if (nsEditing) {
-        await nectarSources.update(nsEditing.id, payload);
+        await nectarSources.update(nsEditing.id, finalPayload);
         message.success('更新成功');
       } else {
-        await nectarSources.create(payload);
+        await nectarSources.create(finalPayload);
         message.success('创建成功');
       }
       setNsModalOpen(false);
@@ -134,13 +159,15 @@ export default function ApiaryList() {
   };
 
   const nectarColumns = [
-    { title: '蜜源名称', dataIndex: 'name', key: 'name' },
-    { title: '季节', dataIndex: 'season', key: 'season', render: (v) => seasonMap[v] || v },
-    { title: '开始月份', dataIndex: 'startMonth', key: 'startMonth' },
-    { title: '结束月份', dataIndex: 'endMonth', key: 'endMonth' },
+    { title: '蜜源植物', dataIndex: 'nectarPlant', key: 'nectarPlant' },
+    { title: '季节', dataIndex: 'season', key: 'season', width: 100, render: (v) => seasonMap[v] || v },
+    { title: '花期开始', dataIndex: 'bloomStart', key: 'bloomStart', width: 120 },
+    { title: '花期结束', dataIndex: 'bloomEnd', key: 'bloomEnd', width: 120 },
+    { title: '备注', dataIndex: 'description', key: 'description' },
     {
       title: '操作',
       key: 'action',
+      width: 140,
       render: (_, record) => (
         <Space>
           <Button type="link" icon={<EditOutlined />} onClick={() => handleNsEdit(record, currentApiaryId || record.apiaryId)}>
@@ -157,11 +184,13 @@ export default function ApiaryList() {
   const columns = [
     { title: '名称', dataIndex: 'name', key: 'name' },
     { title: '位置', dataIndex: 'location', key: 'location' },
-    { title: '主打蜜源', dataIndex: 'mainNectarSource', key: 'mainNectarSource' },
-    { title: '面积(亩)', dataIndex: 'area', key: 'area' },
+    { title: '主打蜜源', dataIndex: 'mainNectarPlant', key: 'mainNectarPlant' },
+    { title: '面积(亩)', dataIndex: 'areaSize', key: 'areaSize', width: 100 },
+    { title: '描述', dataIndex: 'description', key: 'description' },
     {
       title: '操作',
       key: 'action',
+      width: 140,
       render: (_, record) => (
         <Space>
           <Button type="link" icon={<EditOutlined />} onClick={() => handleEdit(record)}>编辑</Button>
@@ -223,11 +252,14 @@ export default function ApiaryList() {
           <Form.Item name="location" label="位置" rules={[{ required: true, message: '请输入位置' }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="mainNectarSource" label="主打蜜源">
+          <Form.Item name="mainNectarPlant" label="主打蜜源">
             <Input />
           </Form.Item>
-          <Form.Item name="area" label="面积(亩)">
+          <Form.Item name="areaSize" label="面积(亩)">
             <InputNumber min={0} style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item name="description" label="描述">
+            <Input.TextArea rows={3} />
           </Form.Item>
         </Form>
       </Modal>
@@ -240,17 +272,20 @@ export default function ApiaryList() {
         destroyOnHidden
       >
         <Form form={nsForm} layout="vertical">
-          <Form.Item name="name" label="蜜源名称" rules={[{ required: true, message: '请输入蜜源名称' }]}>
+          <Form.Item name="nectarPlant" label="蜜源植物" rules={[{ required: true, message: '请输入蜜源植物' }]}>
             <Input />
           </Form.Item>
           <Form.Item name="season" label="季节" rules={[{ required: true, message: '请选择季节' }]}>
-            <Input />
+            <Select options={seasonOptions} />
           </Form.Item>
-          <Form.Item name="startMonth" label="开始月份" rules={[{ required: true, message: '请输入开始月份' }]}>
-            <InputNumber min={1} max={12} style={{ width: '100%' }} />
+          <Form.Item name="bloomStart" label="花期开始">
+            <DatePicker style={{ width: '100%' }} />
           </Form.Item>
-          <Form.Item name="endMonth" label="结束月份" rules={[{ required: true, message: '请输入结束月份' }]}>
-            <InputNumber min={1} max={12} style={{ width: '100%' }} />
+          <Form.Item name="bloomEnd" label="花期结束">
+            <DatePicker style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item name="description" label="备注">
+            <Input.TextArea rows={3} />
           </Form.Item>
         </Form>
       </Modal>

@@ -33,12 +33,20 @@ public class MigrationRecordService {
 
     @Transactional(readOnly = true)
     public List<MigrationRecord> findByApiaryId(Long apiaryId) {
-        return migrationRecordRepository.findByApiaryId(apiaryId);
+        return migrationRecordRepository.findByApiary_Id(apiaryId);
     }
 
     public MigrationRecord create(MigrationRecord record) {
-        Apiary apiary = apiaryRepository.findById(record.getApiary().getId())
-                .orElseThrow(() -> new EntityNotFoundException("Apiary not found with id: " + record.getApiary().getId()));
+        Long apiaryId = record.getApiaryId();
+        if (apiaryId == null && record.getApiary() != null && record.getApiary().getId() != null) {
+            apiaryId = record.getApiary().getId();
+        }
+        if (apiaryId == null) {
+            throw new IllegalArgumentException("apiaryId is required");
+        }
+        final Long finalApiaryId = apiaryId;
+        Apiary apiary = apiaryRepository.findById(apiaryId)
+                .orElseThrow(() -> new EntityNotFoundException("Apiary not found with id: " + finalApiaryId));
         record.setApiary(apiary);
         record.setCreatedAt(LocalDateTime.now());
         record.setUpdatedAt(LocalDateTime.now());

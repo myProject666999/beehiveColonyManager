@@ -33,12 +33,20 @@ public class HiveService {
 
     @Transactional(readOnly = true)
     public List<Hive> findByApiaryId(Long apiaryId) {
-        return hiveRepository.findByApiaryId(apiaryId);
+        return hiveRepository.findByApiary_Id(apiaryId);
     }
 
     public Hive create(Hive hive) {
-        Apiary apiary = apiaryRepository.findById(hive.getApiary().getId())
-                .orElseThrow(() -> new EntityNotFoundException("Apiary not found with id: " + hive.getApiary().getId()));
+        Long apiaryId = hive.getApiaryId();
+        if (apiaryId == null && hive.getApiary() != null && hive.getApiary().getId() != null) {
+            apiaryId = hive.getApiary().getId();
+        }
+        if (apiaryId == null) {
+            throw new IllegalArgumentException("apiaryId is required");
+        }
+        final Long finalApiaryId = apiaryId;
+        Apiary apiary = apiaryRepository.findById(apiaryId)
+                .orElseThrow(() -> new EntityNotFoundException("Apiary not found with id: " + finalApiaryId));
         hive.setApiary(apiary);
         hive.setCreatedAt(LocalDateTime.now());
         hive.setUpdatedAt(LocalDateTime.now());

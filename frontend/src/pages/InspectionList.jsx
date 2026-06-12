@@ -3,13 +3,23 @@ import { Table, Button, Modal, Form, Input, InputNumber, Select, Space, Popconfi
 import { PlusOutlined, EditOutlined, DeleteOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { hives, inspections } from '../api';
 
-const temperamentMap = { gentle: '温顺', moderate: '一般', aggressive: '凶猛' };
+const temperMap = { gentle: '温顺', normal: '一般', aggressive: '凶暴' };
 
 const conditionColors = {
   good: 'green',
   fair: 'orange',
   poor: 'red',
 };
+
+const overallColors = {
+  strong: 'green',
+  medium: 'blue',
+  weak: 'orange',
+};
+
+const overallMap = { strong: '强群', medium: '中等', weak: '弱群' };
+
+const broodMap = { good: '良好', fair: '一般', poor: '差' };
 
 export default function InspectionList() {
   const [hiveList, setHiveList] = useState([]);
@@ -23,11 +33,15 @@ export default function InspectionList() {
   const fetchHives = useCallback(async () => {
     try {
       const res = await hives.list();
-      setHiveList(Array.isArray(res) ? res : res.data || []);
+      const list = Array.isArray(res) ? res : res.data || [];
+      setHiveList(list);
+      if (list.length > 0 && !selectedHive) {
+        setSelectedHive(list[0].id);
+      }
     } catch {
       message.error('获取蜂箱列表失败');
     }
-  }, []);
+  }, [selectedHive]);
 
   const fetchData = useCallback(async () => {
     if (!selectedHive) return;
@@ -57,10 +71,7 @@ export default function InspectionList() {
 
   const handleEdit = (record) => {
     setEditing(record);
-    form.setFieldsValue({
-      ...record,
-      inspectionDate: record.inspectionDate,
-    });
+    form.setFieldsValue(record);
     setModalOpen(true);
   };
 
@@ -102,21 +113,23 @@ export default function InspectionList() {
   const columns = [
     { title: '检查日期', dataIndex: 'inspectionDate', key: 'inspectionDate', width: 120 },
     { title: '蜂王在否', dataIndex: 'queenPresent', key: 'queenPresent', width: 100, render: renderBool },
-    { title: '蜂螨', dataIndex: 'varroaMites', key: 'varroaMites', width: 80, render: renderBool },
-    { title: '疾病', dataIndex: 'disease', key: 'disease', width: 120, render: (v) => v || '-' },
+    { title: '蜂螨', dataIndex: 'hasMites', key: 'hasMites', width: 80, render: renderBool },
+    { title: '有疾病', dataIndex: 'hasDisease', key: 'hasDisease', width: 80, render: renderBool },
+    { title: '病情描述', dataIndex: 'diseaseDetail', key: 'diseaseDetail', width: 140 },
     { title: '储蜜(kg)', dataIndex: 'honeyStore', key: 'honeyStore', width: 100 },
-    { title: '子脾', dataIndex: 'broodPattern', key: 'broodPattern', width: 80, render: (v) => v || '-' },
-    { title: '性情', dataIndex: 'temperament', key: 'temperament', width: 80, render: (v) => temperamentMap[v] || v },
+    { title: '子脾', dataIndex: 'broodCondition', key: 'broodCondition', width: 90, render: (v) => broodMap[v] || v },
+    { title: '性情', dataIndex: 'temper', key: 'temper', width: 90, render: (v) => temperMap[v] || v },
     {
       title: '整体评估',
       dataIndex: 'overallCondition',
       key: 'overallCondition',
       width: 100,
       render: (v) => {
-        const label = { good: '良好', fair: '一般', poor: '较差' }[v] || v;
-        return <Tag color={conditionColors[v] || 'default'}>{label}</Tag>;
+        const label = overallMap[v] || v;
+        return <Tag color={overallColors[v] || 'default'}>{label}</Tag>;
       },
     },
+    { title: '备注', dataIndex: 'notes', key: 'notes' },
     {
       title: '操作',
       key: 'action',
@@ -142,7 +155,7 @@ export default function InspectionList() {
           onChange={setSelectedHive}
           showSearch
           optionFilterProp="label"
-          options={hiveList.map((h) => ({ value: h.id, label: h.code }))}
+          options={hiveList.map((h) => ({ value: h.id, label: h.hiveNumber || h.code }))}
         />
         <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} disabled={!selectedHive}>
           新增检查记录
@@ -168,37 +181,48 @@ export default function InspectionList() {
           <Form.Item name="inspectionDate" label="检查日期" rules={[{ required: true, message: '请输入检查日期' }]}>
             <Input placeholder="YYYY-MM-DD" />
           </Form.Item>
-          <Form.Item name="queenPresent" label="蜂王在否" valuePropName="checked">
+          <Form.Item name="queenPresent" label="蜂王在否">
             <Select placeholder="请选择" allowClear options={[{ value: true, label: '是' }, { value: false, label: '否' }]} />
           </Form.Item>
-          <Form.Item name="varroaMites" label="蜂螨" valuePropName="checked">
+          <Form.Item name="hasMites" label="是否有蜂螨">
             <Select placeholder="请选择" allowClear options={[{ value: true, label: '有' }, { value: false, label: '无' }]} />
           </Form.Item>
-          <Form.Item name="disease" label="疾病">
+          <Form.Item name="hasDisease" label="是否有疾病">
+            <Select placeholder="请选择" allowClear options={[{ value: true, label: '有' }, { value: false, label: '无' }]} />
+          </Form.Item>
+          <Form.Item name="diseaseDetail" label="病情描述">
             <Input />
           </Form.Item>
-          <Form.Item name="honeyStore" label="储蜜(kg)">
-            <InputNumber min={0} style={{ width: '100%' }} />
+          <Form.Item name="honeyStore" label="储蜜量(kg)">
+            <InputNumber min={0} step={0.1} style={{ width: '100%' }} />
           </Form.Item>
-          <Form.Item name="broodPattern" label="子脾">
-            <Input />
+          <Form.Item name="broodCondition" label="子脾状况">
+            <Select
+              allowClear
+              options={[
+                { value: 'good', label: '良好' },
+                { value: 'fair', label: '一般' },
+                { value: 'poor', label: '差' },
+              ]}
+            />
           </Form.Item>
-          <Form.Item name="temperament" label="性情">
+          <Form.Item name="temper" label="蜂群性情">
             <Select
               allowClear
               options={[
                 { value: 'gentle', label: '温顺' },
-                { value: 'moderate', label: '一般' },
-                { value: 'aggressive', label: '凶猛' },
+                { value: 'normal', label: '一般' },
+                { value: 'aggressive', label: '凶暴' },
               ]}
             />
           </Form.Item>
-          <Form.Item name="overallCondition" label="整体评估" rules={[{ required: true, message: '请选择整体评估' }]}>
+          <Form.Item name="overallCondition" label="整体评估">
             <Select
+              allowClear
               options={[
-                { value: 'good', label: '良好' },
-                { value: 'fair', label: '一般' },
-                { value: 'poor', label: '较差' },
+                { value: 'strong', label: '强群' },
+                { value: 'medium', label: '中等' },
+                { value: 'weak', label: '弱群' },
               ]}
             />
           </Form.Item>

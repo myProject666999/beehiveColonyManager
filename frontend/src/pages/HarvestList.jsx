@@ -3,7 +3,7 @@ import { Table, Button, Modal, Form, Input, InputNumber, Select, Space, Popconfi
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { hives, harvests } from '../api';
 
-const gradeMap = { premium: '特级', gradeA: '一级', gradeB: '二级', gradeC: '三级' };
+const gradeMap = { A: '特级', B: '一级', C: '二级' };
 
 export default function HarvestList() {
   const [hiveList, setHiveList] = useState([]);
@@ -17,11 +17,15 @@ export default function HarvestList() {
   const fetchHives = useCallback(async () => {
     try {
       const res = await hives.list();
-      setHiveList(Array.isArray(res) ? res : res.data || []);
+      const list = Array.isArray(res) ? res : res.data || [];
+      setHiveList(list);
+      if (list.length > 0 && !selectedHive) {
+        setSelectedHive(list[0].id);
+      }
     } catch {
       message.error('获取蜂箱列表失败');
     }
-  }, []);
+  }, [selectedHive]);
 
   const fetchData = useCallback(async () => {
     if (!selectedHive) return;
@@ -48,7 +52,7 @@ export default function HarvestList() {
     const avgWater = data.length > 0
       ? data.reduce((sum, r) => sum + (r.waterContent || 0), 0) / data.length
       : 0;
-    return { totalWeight, avgWater };
+    return { totalWeight, avgWater, count: data.length };
   }, [data]);
 
   const handleAdd = () => {
@@ -95,14 +99,15 @@ export default function HarvestList() {
     { title: '取蜜日期', dataIndex: 'harvestDate', key: 'harvestDate', width: 120 },
     { title: '重量(kg)', dataIndex: 'weight', key: 'weight', width: 100 },
     { title: '含水率(%)', dataIndex: 'waterContent', key: 'waterContent', width: 110 },
-    { title: '蜜源', dataIndex: 'nectarSource', key: 'nectarSource', width: 120 },
+    { title: '蜜源植物', dataIndex: 'nectarSource', key: 'nectarSource', width: 120 },
     {
-      title: '等级',
-      dataIndex: 'grade',
-      key: 'grade',
-      width: 80,
+      title: '质量等级',
+      dataIndex: 'qualityGrade',
+      key: 'qualityGrade',
+      width: 100,
       render: (v) => gradeMap[v] || v,
     },
+    { title: '备注', dataIndex: 'notes', key: 'notes' },
     {
       title: '操作',
       key: 'action',
@@ -133,7 +138,7 @@ export default function HarvestList() {
         </Col>
         <Col span={8}>
           <Card>
-            <Statistic title="取蜜次数" value={data.length} valueStyle={{ color: '#52c41a' }} />
+            <Statistic title="取蜜次数" value={stats.count} valueStyle={{ color: '#52c41a' }} />
           </Card>
         </Col>
       </Row>
@@ -146,10 +151,10 @@ export default function HarvestList() {
           onChange={setSelectedHive}
           showSearch
           optionFilterProp="label"
-          options={hiveList.map((h) => ({ value: h.id, label: h.code }))}
+          options={hiveList.map((h) => ({ value: h.id, label: h.hiveNumber || h.code }))}
         />
         <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} disabled={!selectedHive}>
-          新增加蜜记录
+          新增取蜜记录
         </Button>
       </div>
 
@@ -177,17 +182,16 @@ export default function HarvestList() {
           <Form.Item name="waterContent" label="含水率(%)">
             <InputNumber min={0} max={100} step={0.1} style={{ width: '100%' }} />
           </Form.Item>
-          <Form.Item name="nectarSource" label="蜜源">
+          <Form.Item name="nectarSource" label="蜜源植物">
             <Input />
           </Form.Item>
-          <Form.Item name="grade" label="等级">
+          <Form.Item name="qualityGrade" label="质量等级">
             <Select
               allowClear
               options={[
-                { value: 'premium', label: '特级' },
-                { value: 'gradeA', label: '一级' },
-                { value: 'gradeB', label: '二级' },
-                { value: 'gradeC', label: '三级' },
+                { value: 'A', label: '特级' },
+                { value: 'B', label: '一级' },
+                { value: 'C', label: '二级' },
               ]}
             />
           </Form.Item>

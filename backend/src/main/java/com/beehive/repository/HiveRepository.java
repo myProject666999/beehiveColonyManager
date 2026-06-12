@@ -8,9 +8,9 @@ import java.util.List;
 
 public interface HiveRepository extends JpaRepository<Hive, Long> {
 
-    List<Hive> findByApiaryId(Long apiaryId);
+    List<Hive> findByApiary_Id(Long apiaryId);
 
-    List<Hive> findByApiaryIdAndStatus(Long apiaryId, HiveStatus status);
+    List<Hive> findByApiary_IdAndStatus(Long apiaryId, HiveStatus status);
 
     List<Hive> findByStatus(HiveStatus status);
 }

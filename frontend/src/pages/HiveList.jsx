@@ -9,6 +9,11 @@ const statusConfig = {
   dead: { color: 'red', label: '死亡' },
 };
 
+const queenSourceMap = {
+  self_bred: '自育',
+  purchased: '外购',
+};
+
 export default function HiveList() {
   const [apiaryList, setApiaryList] = useState([]);
   const [selectedApiary, setSelectedApiary] = useState(null);
@@ -92,23 +97,27 @@ export default function HiveList() {
   };
 
   const columns = [
-    { title: '编号', dataIndex: 'code', key: 'code' },
-    { title: '蜂王来源', dataIndex: 'queenSource', key: 'queenSource' },
-    { title: '蜂王年份', dataIndex: 'queenYear', key: 'queenYear' },
-    { title: '工蜂数', dataIndex: 'workerBeeCount', key: 'workerBeeCount' },
-    { title: '巢框数', dataIndex: 'frameCount', key: 'frameCount' },
+    { title: '编号', dataIndex: 'hiveNumber', key: 'hiveNumber', width: 120 },
+    { title: '蜂王来源', dataIndex: 'queenSource', key: 'queenSource', width: 100, render: (v) => queenSourceMap[v] || v },
+    { title: '蜂王年份', dataIndex: 'queenYear', key: 'queenYear', width: 100 },
+    { title: '蜂王品种', dataIndex: 'queenBreed', key: 'queenBreed', width: 120 },
+    { title: '工蜂数', dataIndex: 'workerBeeCount', key: 'workerBeeCount', width: 100 },
+    { title: '巢框数', dataIndex: 'frameCount', key: 'frameCount', width: 90 },
     {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
+      width: 90,
       render: (status) => {
         const cfg = statusConfig[status] || { color: 'default', label: status };
         return <Tag color={cfg.color}>{cfg.label}</Tag>;
       },
     },
+    { title: '备注', dataIndex: 'description', key: 'description' },
     {
       title: '操作',
       key: 'action',
+      width: 140,
       render: (_, record) => (
         <Space>
           <Button type="link" icon={<EditOutlined />} onClick={() => handleEdit(record)}>编辑</Button>
@@ -178,19 +187,27 @@ export default function HiveList() {
         destroyOnHidden
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="code" label="编号" rules={[{ required: true, message: '请输入编号' }]}>
+          <Form.Item name="hiveNumber" label="蜂箱编号" rules={[{ required: true, message: '请输入编号' }]}>
             <Input />
           </Form.Item>
           <Form.Item name="queenSource" label="蜂王来源">
-            <Input />
+            <Select
+              options={[
+                { value: 'self_bred', label: '自育' },
+                { value: 'purchased', label: '外购' },
+              ]}
+            />
           </Form.Item>
           <Form.Item name="queenYear" label="蜂王年份">
             <InputNumber min={2000} max={2099} style={{ width: '100%' }} />
           </Form.Item>
-          <Form.Item name="workerBeeCount" label="工蜂数">
+          <Form.Item name="queenBreed" label="蜂王品种">
+            <Input />
+          </Form.Item>
+          <Form.Item name="workerBeeCount" label="工蜂数量">
             <InputNumber min={0} style={{ width: '100%' }} />
           </Form.Item>
-          <Form.Item name="frameCount" label="巢框数">
+          <Form.Item name="frameCount" label="巢框数量">
             <InputNumber min={0} style={{ width: '100%' }} />
           </Form.Item>
           <Form.Item name="status" label="状态" rules={[{ required: true, message: '请选择状态' }]}>
@@ -201,6 +218,9 @@ export default function HiveList() {
                 { value: 'dead', label: '死亡' },
               ]}
             />
+          </Form.Item>
+          <Form.Item name="description" label="备注">
+            <Input.TextArea rows={3} />
           </Form.Item>
         </Form>
       </Modal>

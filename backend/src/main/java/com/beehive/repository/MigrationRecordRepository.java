@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface MigrationRecordRepository extends JpaRepository<MigrationRecord, Long> {
 
-    List<MigrationRecord> findByApiaryId(Long apiaryId);
+    List<MigrationRecord> findByApiary_Id(Long apiaryId);
 
-    List<MigrationRecord> findByApiaryIdAndDepartureDateBetween(Long apiaryId, LocalDate start, LocalDate end);
+    List<MigrationRecord> findByApiary_IdAndDepartureDateBetween(Long apiaryId, LocalDate start, LocalDate end);
 }

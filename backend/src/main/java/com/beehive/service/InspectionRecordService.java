@@ -33,12 +33,20 @@ public class InspectionRecordService {
 
     @Transactional(readOnly = true)
     public List<InspectionRecord> findByHiveId(Long hiveId) {
-        return inspectionRecordRepository.findByHiveId(hiveId);
+        return inspectionRecordRepository.findByHive_Id(hiveId);
     }
 
     public InspectionRecord create(InspectionRecord record) {
-        Hive hive = hiveRepository.findById(record.getHive().getId())
-                .orElseThrow(() -> new EntityNotFoundException("Hive not found with id: " + record.getHive().getId()));
+        Long hiveId = record.getHiveId();
+        if (hiveId == null && record.getHive() != null && record.getHive().getId() != null) {
+            hiveId = record.getHive().getId();
+        }
+        if (hiveId == null) {
+            throw new IllegalArgumentException("hiveId is required");
+        }
+        final Long finalHiveId = hiveId;
+        Hive hive = hiveRepository.findById(hiveId)
+                .orElseThrow(() -> new EntityNotFoundException("Hive not found with id: " + finalHiveId));
         record.setHive(hive);
         record.setCreatedAt(LocalDateTime.now());
         record.setUpdatedAt(LocalDateTime.now());

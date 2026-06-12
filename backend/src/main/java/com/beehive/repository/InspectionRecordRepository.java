@@ -8,9 +8,9 @@ import java.util.List;
 
 public interface InspectionRecordRepository extends JpaRepository<InspectionRecord, Long> {
 
-    List<InspectionRecord> findByHiveId(Long hiveId);
+    List<InspectionRecord> findByHive_Id(Long hiveId);
 
-    List<InspectionRecord> findByHiveIdAndInspectionDateBetween(Long hiveId, LocalDate start, LocalDate end);
+    List<InspectionRecord> findByHive_IdAndInspectionDateBetween(Long hiveId, LocalDate start, LocalDate end);
 
-    List<InspectionRecord> findByHiveApiaryId(Long apiaryId);
+    List<InspectionRecord> findByHive_Apiary_Id(Long apiaryId);
 }

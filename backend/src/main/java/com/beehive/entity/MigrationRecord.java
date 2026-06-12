@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,6 +31,9 @@ public class MigrationRecord {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "apiary_id", nullable = false)
     private Apiary apiary;
+
+    @Transient
+    private Long apiaryId;
 
     @Column(name = "departure_location")
     private String departureLocation;

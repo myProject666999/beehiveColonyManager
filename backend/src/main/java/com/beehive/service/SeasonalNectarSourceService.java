@@ -33,12 +33,20 @@ public class SeasonalNectarSourceService {
 
     @Transactional(readOnly = true)
     public List<SeasonalNectarSource> findByApiaryId(Long apiaryId) {
-        return seasonalNectarSourceRepository.findByApiaryId(apiaryId);
+        return seasonalNectarSourceRepository.findByApiary_Id(apiaryId);
     }
 
     public SeasonalNectarSource create(SeasonalNectarSource source) {
-        Apiary apiary = apiaryRepository.findById(source.getApiary().getId())
-                .orElseThrow(() -> new EntityNotFoundException("Apiary not found with id: " + source.getApiary().getId()));
+        Long apiaryId = source.getApiaryId();
+        if (apiaryId == null && source.getApiary() != null && source.getApiary().getId() != null) {
+            apiaryId = source.getApiary().getId();
+        }
+        if (apiaryId == null) {
+            throw new IllegalArgumentException("apiaryId is required");
+        }
+        final Long finalApiaryId = apiaryId;
+        Apiary apiary = apiaryRepository.findById(apiaryId)
+                .orElseThrow(() -> new EntityNotFoundException("Apiary not found with id: " + finalApiaryId));
         source.setApiary(apiary);
         source.setCreatedAt(LocalDateTime.now());
         source.setUpdatedAt(LocalDateTime.now());

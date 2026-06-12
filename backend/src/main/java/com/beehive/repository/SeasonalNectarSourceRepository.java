@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface SeasonalNectarSourceRepository extends JpaRepository<SeasonalNectarSource, Long> {
 
-    List<SeasonalNectarSource> findByApiaryId(Long apiaryId);
+    List<SeasonalNectarSource> findByApiary_Id(Long apiaryId);
 
-    List<SeasonalNectarSource> findByApiaryIdAndSeason(Long apiaryId, String season);
+    List<SeasonalNectarSource> findByApiary_IdAndSeason(Long apiaryId, String season);
 }

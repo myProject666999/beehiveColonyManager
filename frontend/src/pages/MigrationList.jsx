@@ -85,15 +85,21 @@ export default function MigrationList() {
   const columns = [
     { title: '出发日期', dataIndex: 'departureDate', key: 'departureDate', width: 120 },
     { title: '出发地', dataIndex: 'departureLocation', key: 'departureLocation', width: 140 },
-    { title: '目的地', dataIndex: 'destinationLocation', key: 'destinationLocation', width: 140 },
+    { title: '目的地', dataIndex: 'destination', key: 'destination', width: 140 },
     { title: '到达日期', dataIndex: 'arrivalDate', key: 'arrivalDate', width: 120 },
-    { title: '运输车辆', dataIndex: 'vehicle', key: 'vehicle', width: 120 },
+    { title: '运输车辆', dataIndex: 'transportVehicle', key: 'transportVehicle', width: 120 },
+    { title: '司机姓名', dataIndex: 'driverName', key: 'driverName', width: 100 },
+    { title: '司机电话', dataIndex: 'driverPhone', key: 'driverPhone', width: 120 },
     { title: '蜂箱数', dataIndex: 'hiveCount', key: 'hiveCount', width: 80 },
-    { title: '费用', dataIndex: 'cost', key: 'cost', width: 100, render: (v) => v != null ? `¥${v}` : '-' },
+    { title: '距离(km)', dataIndex: 'distanceKm', key: 'distanceKm', width: 100 },
+    { title: '费用(元)', dataIndex: 'cost', key: 'cost', width: 100, render: (v) => v != null ? `¥${v}` : '-' },
+    { title: '转场原因', dataIndex: 'reason', key: 'reason' },
+    { title: '备注', dataIndex: 'notes', key: 'notes' },
     {
       title: '操作',
       key: 'action',
       width: 140,
+      fixed: 'right',
       render: (_, record) => (
         <Space>
           <Button type="link" icon={<EditOutlined />} onClick={() => handleEdit(record)}>编辑</Button>
@@ -113,14 +119,15 @@ export default function MigrationList() {
           children: (
             <div key={item.id}>
               <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
-                {item.departureDate} - {item.arrivalDate}
+                {item.departureDate} - {item.arrivalDate || '运输中'}
               </div>
               <div>
-                {item.departureLocation} → {item.destinationLocation}
+                {item.departureLocation} → {item.destination}
               </div>
-              <div style={{ color: '#888', fontSize: 13 }}>
-                车辆: {item.vehicle || '-'} | 蜂箱数: {item.hiveCount || '-'} | 费用: {item.cost != null ? `¥${item.cost}` : '-'}
+              <div style={{ color: '#888', fontSize: 13, marginTop: 4 }}>
+                车辆: {item.transportVehicle || '-'} | 蜂箱数: {item.hiveCount || '-'} | 费用: {item.cost != null ? `¥${item.cost}` : '-'}
               </div>
+              {item.reason && <div style={{ color: '#666', fontSize: 13, marginTop: 2 }}>原因: {item.reason}</div>}
               <div style={{ marginTop: 4 }}>
                 <Space>
                   <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleEdit(item)}>编辑</Button>
@@ -164,6 +171,7 @@ export default function MigrationList() {
           columns={columns}
           dataSource={data}
           loading={loading}
+          scroll={{ x: 1400 }}
         />
       ) : (
         renderTimeline()
@@ -175,7 +183,7 @@ export default function MigrationList() {
         onOk={handleSubmit}
         onCancel={() => setModalOpen(false)}
         destroyOnHidden
-        width={560}
+        width={600}
       >
         <Form form={form} layout="vertical">
           <Form.Item name="departureDate" label="出发日期" rules={[{ required: true, message: '请输入出发日期' }]}>
@@ -184,20 +192,32 @@ export default function MigrationList() {
           <Form.Item name="departureLocation" label="出发地" rules={[{ required: true, message: '请输入出发地' }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="destinationLocation" label="目的地" rules={[{ required: true, message: '请输入目的地' }]}>
+          <Form.Item name="destination" label="目的地" rules={[{ required: true, message: '请输入目的地' }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="arrivalDate" label="到达日期" rules={[{ required: true, message: '请输入到达日期' }]}>
+          <Form.Item name="arrivalDate" label="到达日期">
             <Input placeholder="YYYY-MM-DD" />
           </Form.Item>
-          <Form.Item name="vehicle" label="运输车辆">
+          <Form.Item name="transportVehicle" label="运输车辆">
+            <Input placeholder="如: 皖A·12345 / 4.2米货车" />
+          </Form.Item>
+          <Form.Item name="driverName" label="司机姓名">
             <Input />
           </Form.Item>
-          <Form.Item name="hiveCount" label="蜂箱数">
+          <Form.Item name="driverPhone" label="司机电话">
+            <Input />
+          </Form.Item>
+          <Form.Item name="hiveCount" label="蜂箱数量">
             <InputNumber min={0} style={{ width: '100%' }} />
           </Form.Item>
-          <Form.Item name="cost" label="费用(元)">
+          <Form.Item name="distanceKm" label="距离(公里)">
+            <InputNumber min={0} step={0.1} style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item name="cost" label="运输费用(元)">
             <InputNumber min={0} step={0.01} style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item name="reason" label="转场原因">
+            <Input placeholder="如: 追荆条花期" />
           </Form.Item>
           <Form.Item name="notes" label="备注">
             <Input.TextArea rows={3} />

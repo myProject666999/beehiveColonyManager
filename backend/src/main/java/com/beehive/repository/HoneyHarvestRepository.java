@@ -8,9 +8,9 @@ import java.util.List;
 
 public interface HoneyHarvestRepository extends JpaRepository<HoneyHarvest, Long> {
 
-    List<HoneyHarvest> findByHiveId(Long hiveId);
+    List<HoneyHarvest> findByHive_Id(Long hiveId);
 
-    List<HoneyHarvest> findByHiveIdAndHarvestDateBetween(Long hiveId, LocalDate start, LocalDate end);
+    List<HoneyHarvest> findByHive_IdAndHarvestDateBetween(Long hiveId, LocalDate start, LocalDate end);
 
-    List<HoneyHarvest> findByHiveApiaryId(Long apiaryId);
+    List<HoneyHarvest> findByHive_Apiary_Id(Long apiaryId);
 }

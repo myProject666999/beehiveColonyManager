@@ -33,12 +33,20 @@ public class HoneyHarvestService {
 
     @Transactional(readOnly = true)
     public List<HoneyHarvest> findByHiveId(Long hiveId) {
-        return honeyHarvestRepository.findByHiveId(hiveId);
+        return honeyHarvestRepository.findByHive_Id(hiveId);
     }
 
     public HoneyHarvest create(HoneyHarvest harvest) {
-        Hive hive = hiveRepository.findById(harvest.getHive().getId())
-                .orElseThrow(() -> new EntityNotFoundException("Hive not found with id: " + harvest.getHive().getId()));
+        Long hiveId = harvest.getHiveId();
+        if (hiveId == null && harvest.getHive() != null && harvest.getHive().getId() != null) {
+            hiveId = harvest.getHive().getId();
+        }
+        if (hiveId == null) {
+            throw new IllegalArgumentException("hiveId is required");
+        }
+        final Long finalHiveId = hiveId;
+        Hive hive = hiveRepository.findById(hiveId)
+                .orElseThrow(() -> new EntityNotFoundException("Hive not found with id: " + finalHiveId));
         harvest.setHive(hive);
         harvest.setCreatedAt(LocalDateTime.now());
         harvest.setUpdatedAt(LocalDateTime.now());
