@@ -13,7 +13,9 @@ public class JacksonConfig {
     @Bean
     public ObjectMapper objectMapper(Jackson2ObjectMapperBuilder builder) {
         ObjectMapper objectMapper = builder.createXmlMapper(false).build();
-        objectMapper.registerModule(new Hibernate6Module());
+        Hibernate6Module module = new Hibernate6Module();
+        module.disable(Hibernate6Module.Feature.USE_TRANSIENT_ANNOTATION);
+        objectMapper.registerModule(module);
         objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
         return objectMapper;
     }
